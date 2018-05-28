@@ -11,16 +11,28 @@
     <!-- endbuild -->
   </head>
   <body>
-    <main class="container">
+    <div class="container" id="app" @click="cancelMenu">
       <ul>
-        <li>xiaoming</li>
+        <draggable :list="articles" class="list">
+          <li v-for="item in articles" class="article" @contextmenu="showDelete($event, item)">
+            <span class="cover">
+              <img :src="item.cover" :alt="item.title">
+            </span>
+            <div class="content">
+              <p class="title" :title="item.title">{{item.title}}</p>
+              <p>{{new Date(item.update_time*1000).Format('yyyy-MM-dd hh:mm:ss')}}</p>
+            </div>
+          </li>
+        </draggable>
       </ul>
-    </main>
-
+      <footer class="footer">
+        <div class="ivu-btn ivu-btn-primary long" @click="addToComposite">
+          <span>合成</span>
+        </div>
+      </footer>
+      <div class="delete-btn" v-show="ifDelete" :style="pos" @click="delArticle">删除</div>
+    </div>
     <!-- build:js scripts/popup-vendor.js -->
-    <!-- bower:js -->
-    <script src="bower_components/jquery/dist/jquery.js"></script>
-    <!-- endbower -->
     <!-- endbuild -->
 
     <!-- build:js scripts/popup.js -->

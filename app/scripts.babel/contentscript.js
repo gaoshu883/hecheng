@@ -1,4 +1,6 @@
 'use strict';
+// 缓存全部的文章列表
+var articles = [];
 /**
  * 解析当前网址参数
  */
@@ -27,6 +29,18 @@ function getArticles(count) {
             scene: 1
         }
     })
+}
+/**
+ * 查找文章
+ * @param {String} appid
+ * @param {String} idx  文章位置 （从1开始）
+ */
+function searchArticle(appid, idx) {
+    console.log(appid, idx);
+    var findYou = articles.find(function (article) {
+        return article.appmsgid == appid && article.itemidx == idx
+    });
+    return findYou;
 }
 /**
  * 根据图文素材id得到详细信息
@@ -77,7 +91,7 @@ function saveArticles(params) {
  */
 function _convertToMpParam(arr) {
     var obj = {}
-    arr.forEach(function(item, index) {
+    arr.forEach(function (item, index) {
         var it = {};
         for (var i in item) {
             it[i + index] = item[i];
@@ -90,74 +104,88 @@ function _convertToMpParam(arr) {
     return obj
 }
 /**
- * HTML创建
+ * 获取文章详情信息整理发送
  */
-function makeButton() {
-    $(document.body).append('<div class="xiaolu__composite"><div class="xiaolu__btn weui-desktop-btn weui-desktop-btn_main weui-desktop-btn_primary">合成器</div><section class="xiaolu__list"></section></div>')
-    $('.xiaolu__btn').click(function (e) {
-        $('.xiaolu__list').toggleClass('xiaolu__toggle')
-    });
-    $(document).on('click', '.xiaolu__submit', function (e) {
-        var appids = []
-        $('.xiaolu__item:checked').each(function (idx, item) {
-            appids.push(item.value)
-        })
-        if (!appids.length) {
-            alert('请选择至少一篇文章')
-        } else if (appids.length > 8) {
-            alert('最多只能选择八篇文章哦')
-        } else {
-            var promiseAll = appids.map(function (item, index) {
-                var adid = item.split('_');
-                return new Promise(function (resolve) {
-                    getNewsById(adid[0]).done(function(res) {
-                        resolve({
-                            res: res,
-                            idx: adid[1]
-                        })
-                    })
-                })
-            });
-            Promise.all(promiseAll).then(function (data) {
-                console.log(data, 'promise.all结果')
-                var scs = [];
-                data.forEach(function (item, index) {
-                    var idx = item.idx;
-                    var res = item.res;
-                    if (res.base_resp.ret == 0) {
-                        var appmsgInfo = JSON.parse(res.app_msg_info);
-                        scs.push(appmsgInfo.item[0].multi_item[idx - 1]);
-                    }
-                });
-                saveArticles(_convertToMpParam(scs)).done(function (res) {
-                    if (res.base_resp && res.base_resp.ret == 0) {
-                        window.location.reload();
-                    }
+function prepareArticles(articles, cb) {
+    var promiseAll = articles.map(function (item, index) {
+        // 只需要appid和idx
+        return new Promise(function (resolve) {
+            getNewsById(item.appmsgid).done(function (res) {
+                resolve({
+                    res: res,
+                    idx: item.itemidx,
+                    realIndex: index
                 })
             })
-        }
-    })
-    getArticles(12).done(function (res) {
-        console.log(res, '前12条图文')
-        getNewsById(res.app_msg_list[0].appmsgid).done(function (res) {
-            console.log('获取微信图文素材详情', JSON.parse(res.app_msg_info))
         })
-        if (res.base_resp.ret == 0) {
-            var html = '';
-            if (res.app_msg_list.length) {
-                res.app_msg_list.forEach(function (item, index) {
-                    html += '<p style="margin-bottom:10px"><input class="xiaolu__item" id="' + item.aid + '" type="checkbox" value="' + item.aid + '"><label style="cursor:pointer" for="' + item.aid + '">' + '<span style="font-size:0.75em">[' + new Date(item.update_time * 1000).toLocaleString() + ']</span> <span style="font-weight:bold;color:#008cee;">' + item.title + '</span></label></p>'
-                });
-                html += '<button class="xiaolu__submit weui-desktop-btn weui-desktop-btn_main weui-desktop-btn_primary">合成</button>'
-            } else {
-                html = '请创建素材~'
+    });
+    Promise.all(promiseAll).then(function (data) {
+        console.log(data, 'promise.all结果')
+        var scs = [];
+        data.forEach(function (item, index) {
+            var idx = item.idx;
+            var res = item.res;
+            if (res.base_resp.ret == 0) {
+                var appmsgInfo = JSON.parse(res.app_msg_info);
+                scs.push(appmsgInfo.item[0].multi_item[idx - 1]);
             }
-            $('.xiaolu__list').append(html)
-        }
+        });
+        console.log(scs, '素材数据')
+        saveArticles(_convertToMpParam(scs)).done(function (res) {
+            if (res.base_resp && res.base_resp.ret == 0) {
+                window.location.reload();
+                cb && cb()
+            }
+        })
     })
 }
 
 /**
+ * 安装合成按钮
+ */
+function installButton() {
+    var children = $('.weui-desktop-card__bd').each(function (idx, it) {
+        var parent = $(it).parents('.weui-desktop-appmsg');
+        var appid = parent.attr('data-appid');
+        var children = $(it).children();
+        children.each(function (index, item) {
+            $(item).find('.weui-desktop-mask').append('<span title="添加到合成器" data-adids="' + appid + '_' + (index + 1) + '" class="xiaolu__add"></span>')
+        })
+    });
+
+    $('.xiaolu__add').click(function (e) {
+        var adids = $(e.target).attr('data-adids').split('_');
+        var appid = adids[0];
+        var idx = adids[1];
+        var target = searchArticle(appid, idx);
+        chrome.runtime.sendMessage({ action: 'add-one', appmsg: target }, function (res) {
+            console.log(res, '来自后台的消息')
+            $(e.target).addClass('success');
+            setTimeout(() => {
+                $(e.target).removeClass('success');
+            }, 2000);
+        });
+    })
+}
+/**
  * 开始工作
  */
-makeButton();
+installButton();
+getArticles(999).done(function (res) {
+    if (res.base_resp.ret == 0) {
+        articles = res.app_msg_list
+    }
+});
+/**
+ * 通讯
+ */
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+    switch (request.action) {
+        case 'composite':
+            var articles = request.articles;
+            prepareArticles(articles, function () {
+                chrome.runtime.sendMessage({ action: 'finish-add' });
+            })
+            break;
+    }
+});
