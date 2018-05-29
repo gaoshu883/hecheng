@@ -1,42 +1,49 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <!-- build:css styles/popup-vendor.css -->
-    <!-- bower:css -->
-    <!-- endbower -->
-    <!-- endbuild -->
-    <!-- build:css styles/main.css -->
-    <link href="styles/main.css" rel="stylesheet">
-    <!-- endbuild -->
-  </head>
-  <body>
-    <div class="container" id="app" @click="cancelMenu">
-      <ul>
-        <draggable :list="articles" class="list">
-          <li v-for="item in articles" class="article" @contextmenu="showDelete($event, item)">
-            <span class="cover">
-              <img :src="item.cover" :alt="item.title">
-            </span>
-            <div class="content">
-              <p class="title" :title="item.title">{{item.title}}</p>
-              <p>{{new Date(item.update_time*1000).Format('yyyy-MM-dd hh:mm:ss')}}</p>
-            </div>
-          </li>
-        </draggable>
-      </ul>
+
+<head>
+  <meta charset="utf-8">
+  <!-- build:css styles/popup-vendor.css -->
+  <!-- bower:css -->
+  <!-- endbower -->
+  <!-- endbuild -->
+  <!-- build:css styles/main.css -->
+  <link href="styles/main.css" rel="stylesheet">
+  <!-- endbuild -->
+</head>
+
+<body>
+  <div class="container" id="app" @click="cancelMenu">
+    <div v-if="articles.length">
+      <draggable :list="articles" class="list">
+        <div v-for="item in articles" class="article" @contextmenu="showDelete($event, item)">
+          <span class="cover">
+            <img :src="item.cover" :alt="item.title">
+          </span>
+          <div class="content">
+            <p class="title" :title="item.title">{{item.title}}</p>
+            <p>{{new Date(item.update_time*1000).Format('yyyy-MM-dd hh:mm:ss')}}</p>
+          </div>
+        </div>
+      </draggable>
       <footer class="footer">
         <div class="ivu-btn ivu-btn-primary long" @click="addToComposite">
           <span>合成</span>
         </div>
       </footer>
-      <div class="delete-btn" v-show="ifDelete" :style="pos" @click="delArticle">删除</div>
     </div>
-    <!-- build:js scripts/popup-vendor.js -->
-    <!-- endbuild -->
+    <div v-else class="place-holder">
+      <img src="/images/nothing.png">
+      <p>啊哦，快快添加素材吧~</p>
+    </div>
+    <div class="delete-btn" v-show="ifDelete" :style="pos" @click="delArticle">删除</div>
+  </div>
+  <!-- build:js scripts/popup-vendor.js -->
+  <!-- endbuild -->
 
-    <!-- build:js scripts/popup.js -->
-    <script src="scripts/popup.js"></script>
-    <!-- endbuild -->
-  </body>
+  <!-- build:js scripts/popup.js -->
+  <script src="scripts/popup.js"></script>
+  <!-- endbuild -->
+</body>
+
 </html>

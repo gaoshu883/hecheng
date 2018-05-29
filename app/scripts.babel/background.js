@@ -3,12 +3,24 @@ import { getData, saveData } from './base.js';
 // 缓存合成器文章列表
 var articles = [];
 
-chrome.runtime.onInstalled.addListener(details => {
-  console.log('previousVersion', details.previousVersion);
-});
-
-chrome.tabs.onUpdated.addListener(tabId => {
-  chrome.pageAction.show(tabId);
+// When the extension is installed or upgraded ...
+chrome.runtime.onInstalled.addListener(function () {
+  // Replace all rules ...
+  chrome.declarativeContent.onPageChanged.removeRules(undefined, function () {
+    // With a new rule ...
+    chrome.declarativeContent.onPageChanged.addRules([
+      {
+        // That fires when a page's URL contains a 'g' ...
+        conditions: [
+          new chrome.declarativeContent.PageStateMatcher({
+            pageUrl: { urlContains: 'mp.weixin.qq.com/cgi-bin/appmsg' },
+          })
+        ],
+        // And shows the extension's page action.
+        actions: [new chrome.declarativeContent.ShowPageAction()]
+      }
+    ]);
+  });
 });
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
@@ -23,16 +35,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         } else {
           articles.push(request.appmsg);
           saveData({ articles }).then(() => {
-            sendResponse({msg: 'success'});
+            sendResponse({ msg: 'success' });
           })
         }
       });
-      return true;
-      break;
-    case 'finish-add':
-      saveData({ articles: [] }).then(() => {
-        console.log('清空数据');
-      });
       break;
   }
+  return true;
 });

@@ -22,7 +22,12 @@ new Vue({
   methods: {
     addToComposite() {
       if (this.articles.length) {
-        sendMessage({ action: 'composite', articles: this.articles })
+        sendMessage({ action: 'composite', articles: this.articles }, () => {
+          this.articles = []
+          saveData({ articles: [] }).then(() => {
+            console.log('清空数据');
+          });
+        })
       } else {
         alert('请添加文章')
       }
@@ -53,6 +58,7 @@ new Vue({
     });
   }
 });
+
 //格式化日期函数new Date().Format("yyyy-MM-dd")
 Date.prototype.Format = function (fmt) {
   //author: meizz

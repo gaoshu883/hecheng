@@ -184,8 +184,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         case 'composite':
             var articles = request.articles;
             prepareArticles(articles, function () {
-                chrome.runtime.sendMessage({ action: 'finish-add' });
+                sendResponse({ action: 'finish-add' });
             })
             break;
     }
+    return true;
 });

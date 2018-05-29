@@ -2,11 +2,11 @@ body {
   padding: 20px;
 }
 .container {
-  width: 400px;
   background: #f8f8f8;
 }
 .list {
   padding: 20px;
+  width: 350px;
   height: 330px;
   overflow-y: auto;
   overflow-x: hidden;
@@ -113,4 +113,18 @@ body {
 .delete-btn:hover {
   cursor: pointer;
   background: #f8f8f8;
+}
+
+.place-holder {
+  width: 200px;
+  padding: 40px;
+  text-align: center;
+  font-size: 14px;
+  color: #888;
+}
+.place-holder img {
+  width: 100%;
+}
+.place-holder p {
+  margin-top: 10px;
 }

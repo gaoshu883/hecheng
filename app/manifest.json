@@ -28,7 +28,8 @@
     "webRequest",
     "webRequestBlocking",
     "contextMenus",
-    "tabs"
+    "tabs",
+    "declarativeContent"
   ],
   "content_scripts": [
     {
