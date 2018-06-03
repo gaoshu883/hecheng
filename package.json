@@ -35,6 +35,7 @@
     "wiredep": "^4.0.0"
   },
   "dependencies": {
+    "gulp-cli": "^2.0.1",
     "vue": "^2.5.16",
     "vuedraggable": "^2.16.0"
   }
