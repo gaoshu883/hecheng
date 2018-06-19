@@ -2,6 +2,7 @@
 import '../styles/reset.css';
 import { getData, saveData, sendMessage } from './base.js';
 import draggable from 'vuedraggable';
+import spin from './spin';
 import Vue from 'vue';
 new Vue({
   el: '#app',
@@ -13,16 +14,20 @@ new Vue({
         top: 0,
         left: 0
       },
-      current: null
+      current: null,
+      loading: false
     }
   },
   components: {
-    draggable
+    draggable,
+    spin
   },
   methods: {
     addToComposite() {
       if (this.articles.length) {
+        this.loading = true;
         sendMessage({ action: 'composite', articles: this.articles }, () => {
+          this.loading = false;
           this.articles = []
           saveData({ articles: [] }).then(() => {
             console.log('清空数据');

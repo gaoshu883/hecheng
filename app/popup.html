@@ -18,7 +18,7 @@
       <draggable :list="articles" class="list">
         <div v-for="item in articles" class="article" @contextmenu="showDelete($event, item)">
           <span class="cover">
-            <img :src="item.cover" :alt="item.title">
+            <img :src="item.cover || '/images/holder.png'" :alt="item.title">
           </span>
           <div class="content">
             <p class="title" :title="item.title">{{item.title}}</p>
@@ -31,6 +31,8 @@
           <span>合成</span>
         </div>
       </footer>
+
+      <spin v-show="loading"></spin>
     </div>
     <div v-else class="place-holder">
       <img src="/images/nothing.png">
