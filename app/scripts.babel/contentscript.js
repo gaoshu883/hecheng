@@ -133,18 +133,49 @@ function prepareArticles(articles, cb) {
     });
     console.log(scs, '素材数据')
     scs.forEach(item => {
-      //!额外处理分享文章数据
-      _handleShareArticle(item);
+      _handleShareArticle(_formatWxData(item));
     });
     saveArticles(_convertToMpParam(scs)).done(function (res) {
-        if (res.base_resp && res.base_resp.ret == 0) {
-            window.location.reload();
-            cb && cb()
-        }
+      if (res.base_resp && res.base_resp.ret == 0) {
+        window.location.reload();
+        cb && cb()
+      }
     })
   })
 }
 
+/**
+ * 格式化微信素材上传数据
+ *
+ * @param {Object} item
+ * @returns
+ * title
+ * author
+ * digest
+ * auto_gen_digest
+ * content
+ * need_open_comment
+ * only_fans_can_comment
+ * cdn_url
+ * cdn_url_back
+ * show_cover_pic
+ * cpyright_type
+ * !ori_white_list  白名单列表
+ * free_content
+ *
+ *! fileid 字段名称
+ *! sourceurl 字段名称
+ */
+function _formatWxData(item) {
+  item['fileid'] = item.file_id
+  item['sourceurl'] = item.source_url
+  item['ori_white_list'] = item.ori_white_list.replace(/&quot;/g, '"')
+  return item;
+}
+/**
+ * 针对分享数据进行格式化
+ * @param {Object} item
+ */
 function _handleShareArticle(item) {
   let type = item.share_page_type * 1 || -1;
 
