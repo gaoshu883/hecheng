@@ -35,8 +35,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         } else {
           articles.push(request.appmsg);
           saveData({ articles }).then(() => {
-            sendResponse({ msg: 'success' });
+            sendResponse({ ret: 0, msg: 'success' });
           })
+            .catch(() => {
+              sendResponse({ ret: '-1', msg: 'fail' });
+            })
         }
       });
       break;

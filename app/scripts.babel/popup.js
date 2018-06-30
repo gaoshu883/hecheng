@@ -26,12 +26,14 @@ new Vue({
     addToComposite() {
       if (this.articles.length) {
         this.loading = true;
-        sendMessage({ action: 'composite', articles: this.articles }, () => {
+        sendMessage({ action: 'composite', articles: this.articles }, (res) => {
           this.loading = false;
-          this.articles = []
-          saveData({ articles: [] }).then(() => {
-            console.log('清空数据');
-          });
+          if (res.action === 'success-finish-add') {
+            this.articles = []
+            saveData({ articles: [] })
+          } else {
+            alert('┗( T﹏T )┛合成失败！')
+          }
         })
       } else {
         alert('请添加文章')
@@ -51,7 +53,7 @@ new Vue({
     // 删除文章
     delArticle() {
       let index = this.articles.findIndex((item) => {
-        return item.appmsgid === this.current.appmsgid && item.itemidx === this.current.itemidx
+        return item.appmsgid === this.current.appmsgid
       })
       this.articles.splice(index, 1)
       saveData({ articles: this.articles })

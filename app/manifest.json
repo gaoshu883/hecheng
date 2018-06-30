@@ -29,7 +29,8 @@
     "webRequestBlocking",
     "contextMenus",
     "tabs",
-    "declarativeContent"
+    "declarativeContent",
+    "unlimitedStorage"
   ],
   "content_scripts": [
     {

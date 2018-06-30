@@ -4,7 +4,7 @@
  */
 export const getData = (params) => {
   return new Promise((resolve) => {
-    chrome.storage.sync.get(params, (items) => {
+    chrome.storage.local.get(params, (items) => {
       resolve(items);
     });
   });
@@ -15,7 +15,7 @@ export const getData = (params) => {
  */
 export const saveData = (params) => {
   return new Promise((resolve) => {
-    chrome.storage.sync.set(params, function () {
+    chrome.storage.local.set(params, function () {
       resolve();
     });
   })

@@ -1,19 +1,4 @@
 import Wxrequest from './wxrequest'
-// 缓存全部的文章列表
-var articles = [];
-
-/**
- * 查找文章
- * @param {String} appid
- * @param {String} idx  文章位置 （从1开始）
- */
-function searchArticle (appid, idx) {
-  console.log(appid, idx);
-  var findYou = articles.find(function (article) {
-    return article.appmsgid == appid && article.itemidx == idx
-  });
-  return findYou;
-}
 
 /**
  * 数组转为微信文章参数
@@ -32,45 +17,6 @@ function _convertToMpParam (arr) {
     count: arr.length
   })
   return obj
-}
-/**
- * 获取文章详情信息整理发送
- */
-function prepareArticles (articles, cb) {
-  var promiseAll = articles.map(function (item, index) {
-    // 只需要appid和idx
-    return new Promise(function (resolve) {
-      Wxrequest.getNewsById(item.appmsgid).done(function (res) {
-        resolve({
-          res: res,
-          idx: item.itemidx,
-          realIndex: index
-        })
-      })
-    })
-  });
-  Promise.all(promiseAll).then(function (data) {
-    console.log(data, 'promise.all结果')
-    var scs = [];
-    data.forEach(function (item) {
-      var idx = item.idx;
-      var res = item.res;
-      if (res.base_resp.ret == 0) {
-        var appmsgInfo = JSON.parse(res.app_msg_info);
-        scs.push(appmsgInfo.item[0].multi_item[idx - 1]);
-      }
-    });
-    console.log(scs, '素材数据')
-    scs.forEach(item => {
-      _handleShareArticle(_formatWxData(item));
-    });
-    Wxrequest.saveArticles(_convertToMpParam(scs)).done(function (res) {
-      if (res.base_resp && res.base_resp.ret == 0) {
-        window.location.reload();
-        cb && cb()
-      }
-    })
-  })
 }
 
 /**
@@ -99,6 +45,8 @@ function _formatWxData (item) {
   item['fileid'] = item.file_id
   item['sourceurl'] = item.source_url
   item['ori_white_list'] = item.ori_white_list.replace(/&quot;/g, '"')
+  delete item.update_time
+  delete item.appmsgid
   return item;
 }
 /**
@@ -138,44 +86,68 @@ function installButton () {
   });
 
   $('.xiaolu__add').click(function (e) {
-    var adids = $(e.target).attr('data-adids').split('_');
+    let appmsgid = $(e.target).attr('data-adids')
+    var adids = appmsgid.split('_');
     var appid = adids[0];
     var idx = adids[1];
-    var target = searchArticle(appid, idx);
-    chrome.runtime.sendMessage({
-      action: 'add-one',
-      appmsg: target
-    }, function (res) {
-      console.log(res, '来自后台的消息')
-      $(e.target).addClass('success');
-      setTimeout(() => {
-        $(e.target).removeClass('success');
-      }, 2000);
-    });
+    Wxrequest.getNewsById(appid).done((res) => {
+      if (res.base_resp.ret == 0) {
+        let appmsgInfo = JSON.parse(res.app_msg_info)
+        let update_time = appmsgInfo.item[0].update_time
+        let target = appmsgInfo.item[0].multi_item[idx - 1]
+        Object.assign(target, { update_time, appmsgid })
+        console.log('当前用户选中的素材数据', target, appmsgInfo)
+        chrome.runtime.sendMessage({
+          action: 'add-one',
+          appmsg: target
+        }, function (res) {
+          console.log(res, '来自后台的消息')
+          if (res.ret === 0) {
+            $(e.target).addClass('success');
+            setTimeout(() => {
+              $(e.target).removeClass('success');
+            }, 2000);
+          } else {
+            alert('┗( T﹏T )┛出错啦，请再试一次')
+          }
+        });
+      } else {
+        alert('┗( T﹏T )┛出错啦，请再试一次')
+      }
+    })
+      .catch(() => {
+        alert('┗( T﹏T )┛出错啦，请再试一次')
+      })
   })
 }
 /**
  * 开始工作
  */
-installButton();
-Wxrequest.getArticles(999).done(function (res) {
-  if (res.base_resp.ret == 0) {
-    articles = res.app_msg_list
-  }
-});
+installButton()
 /**
  * 通讯
  */
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   switch (request.action) {
     case 'composite':
-      var articles = request.articles;
-      prepareArticles(articles, function () {
-        sendResponse({
-          action: 'finish-add'
-        });
+      var articles = request.articles
+      console.log(articles, '素材数据')
+      articles.forEach(item => {
+        _handleShareArticle(_formatWxData(item))
       })
-      break;
+      Wxrequest.saveArticles(_convertToMpParam(articles)).done(function (res) {
+        if (res.base_resp && res.base_resp.ret == 0) {
+          window.location.reload()
+          sendResponse({
+            action: 'success-finish-add'
+          })
+        } else {
+          sendResponse({
+            action: 'fail-finish-add'
+          })
+        }
+      })
+      break
   }
-  return true;
+  return true
 });
