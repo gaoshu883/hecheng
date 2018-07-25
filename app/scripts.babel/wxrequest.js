@@ -54,7 +54,7 @@ export default {
    * @param {Boolean} isAgain
    */
   saveArticles: (params, isAgain) => {
-    var formData = Object.assign({
+    let formData = Object.assign({
       token: getUrlParam('token'),
       lang: 'zh_CN',
       f: 'json',

@@ -1,14 +1,14 @@
 import Wxrequest from './wxrequest'
-let reminderCodeList = [15801, 15802, 15803, 15804, 15805, 15806]
+const reminderCodeList = [15801, 15802, 15803, 15804, 15805, 15806]
 /**
  * 数组转为微信文章参数
  * @param {array} arr
  */
 function _convertToMpParam (arr) {
-  var obj = {}
+  let obj = {}
   arr.forEach(function (item, index) {
-    var it = {};
-    for (var i in item) {
+    let it = {};
+    for (let i in item) {
       it[i + index] = item[i];
     }
     Object.assign(obj, it)
@@ -78,9 +78,9 @@ function _handleShareArticle (item) {
  */
 function installButton () {
   $('.weui-desktop-card__bd').each(function (idx, it) {
-    var parent = $(it).parents('.weui-desktop-appmsg');
-    var appid = parent.attr('data-appid');
-    var children = $(it).children();
+    let parent = $(it).parents('.weui-desktop-appmsg');
+    let appid = parent.attr('data-appid');
+    let children = $(it).children();
     children.each(function (index, item) {
       $(item).find('.weui-desktop-mask').append('<span title="添加到合成器" data-adids="' + appid + '_' + (index + 1) + '" class="xiaolu__add"></span>')
     })
@@ -88,9 +88,9 @@ function installButton () {
 
   $('.xiaolu__add').click(function (e) {
     let appmsgid = $(e.target).attr('data-adids')
-    var adids = appmsgid.split('_');
-    var appid = adids[0];
-    var idx = adids[1];
+    let adids = appmsgid.split('_');
+    let appid = adids[0];
+    let idx = adids[1];
     Wxrequest.getNewsById(appid).done((res) => {
       if (res.base_resp.ret == 0) {
         let appmsgInfo = JSON.parse(res.app_msg_info)
@@ -157,7 +157,7 @@ installButton()
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   switch (request.action) {
     case 'composite':
-      var articles = request.articles
+      let articles = request.articles
       articles = _convertToMpParam(articles.map(item => _handleShareArticle(_formatWxData(item))))
       compositeArticles(articles, false, sendResponse)
       break

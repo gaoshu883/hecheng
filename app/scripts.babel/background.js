@@ -1,7 +1,7 @@
 'use strict';
 import { getData, saveData } from './base.js';
 // 缓存合成器文章列表
-var articles = [];
+let articles = [];
 
 // When the extension is installed or upgraded ...
 chrome.runtime.onInstalled.addListener(function () {
