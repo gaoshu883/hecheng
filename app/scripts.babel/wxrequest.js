@@ -1,14 +1,9 @@
 /*
  * Name: wxrequest.js
- * File: d:\WORK\日常supply\hecheng\app\scripts.babel\wxrequest.js
- * Project: d:\WORK\日常supply\hecheng
  * Created Date:  2018-06-30 1:41:39 pm
  * Author: xiaolu
- * -----
- * Last Modified:
- * Modified By:
- * -----
- * Copyright (c) 2018 WenXu Tech.
+ * Last Modified: 2018-07-25 10:51:00 am
+ * Modified By: xiaolu
  */
 import { getUrlParam } from './base'
 export default {
@@ -56,8 +51,9 @@ export default {
   /**
    * 保存素材
    * @param {Object} params
+   * @param {Boolean} isAgain
    */
-  saveArticles: (params) => {
+  saveArticles: (params, isAgain) => {
     var formData = Object.assign({
       token: getUrlParam('token'),
       lang: 'zh_CN',
@@ -66,6 +62,8 @@ export default {
       random: Math.random(),
       AppMsgId: ''
     }, params)
+    // #fix bug 再次保存
+    isAgain && Object.assign(formData, { confirm: 1, confirm_treatment: 40 })
     return $.post({
       url: '/cgi-bin/operate_appmsg?t=ajax-response&sub=create&type=10',
       data: formData,

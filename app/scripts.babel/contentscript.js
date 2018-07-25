@@ -1,5 +1,5 @@
 import Wxrequest from './wxrequest'
-
+let reminderCodeList = [15801, 15802, 15803, 15804, 15805, 15806]
 /**
  * 数组转为微信文章参数
  * @param {array} arr
@@ -71,6 +71,7 @@ function _handleShareArticle (item) {
     default:
       break;
   }
+  return item;
 }
 /**
  * 安装合成按钮
@@ -120,6 +121,32 @@ function installButton () {
       })
   })
 }
+
+/**
+ * 素材合成
+ * @param {Object} articles  文章数据
+ * @param {Boolean} isAgain  是否再次保存
+ * @param {Function} sendResponse  回调
+ */
+function compositeArticles(articles, isAgain, sendResponse) {
+  Wxrequest.saveArticles(articles, isAgain).done(function (res) {
+    if (res.ret == '0') {
+      window.location.reload()
+      sendResponse({
+        action: 'success-finish-add'
+      })
+    } else if (reminderCodeList.includes(Number(res.ret))) {
+      // 再次上传
+      // #fix bug
+      compositeArticles(articles, true, sendResponse)
+    } else {
+      sendResponse({
+        action: 'fail-finish-add'
+      })
+    }
+  })
+}
+
 /**
  * 开始工作
  */
@@ -131,22 +158,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   switch (request.action) {
     case 'composite':
       var articles = request.articles
-      console.log(articles, '素材数据')
-      articles.forEach(item => {
-        _handleShareArticle(_formatWxData(item))
-      })
-      Wxrequest.saveArticles(_convertToMpParam(articles)).done(function (res) {
-        if (res.base_resp && res.base_resp.ret == 0) {
-          window.location.reload()
-          sendResponse({
-            action: 'success-finish-add'
-          })
-        } else {
-          sendResponse({
-            action: 'fail-finish-add'
-          })
-        }
-      })
+      articles = _convertToMpParam(articles.map(item => _handleShareArticle(_formatWxData(item))))
+      compositeArticles(articles, false, sendResponse)
       break
   }
   return true
