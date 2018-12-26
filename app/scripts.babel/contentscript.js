@@ -104,9 +104,9 @@ function installButton () {
         }, function (res) {
           console.log(res, '来自后台的消息')
           if (res.ret === 0) {
-            $(e.target).addClass('success');
+            $(e.target).parent().parent().addClass('success');
             setTimeout(() => {
-              $(e.target).removeClass('success');
+              $(e.target).parent().parent().removeClass('success');
             }, 2000);
           } else {
             alert('┗( T﹏T )┛出错啦，请再试一次')
